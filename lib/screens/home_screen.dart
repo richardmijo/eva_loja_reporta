@@ -39,7 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
     try {
       final response = await _dio.get(
-        'https://jsonplaceholder.typicode.com/posts',
+        'https://6a1cf27ebcc4f20d5ca3b7bc.mockapi.io/api/v1/incidents',
       );
 
       if (response.statusCode == 200) {
@@ -53,16 +53,16 @@ class _HomeScreenState extends State<HomeScreen> {
               'tipo': item['id'] % 3 == 0
                   ? 'bache'
                   : item['id'] % 3 == 1
-                      ? 'alumbrado'
-                      : 'inundacion',
+                  ? 'alumbrado'
+                  : 'inundacion',
               'estado': item['id'] % 2 == 0 ? 'resuelto' : 'pendiente',
               'zona': item['id'] % 4 == 0
                   ? 'Centro'
                   : item['id'] % 4 == 1
-                      ? 'El Valle'
-                      : item['id'] % 4 == 2
-                          ? 'Carigán'
-                          : 'Motupe',
+                  ? 'El Valle'
+                  : item['id'] % 4 == 2
+                  ? 'Carigán'
+                  : 'Motupe',
             };
           }).toList();
           cargando = false;
@@ -99,12 +99,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      body: Column(
-        children: [
-          _buildBarraFiltros(),
-          _buildContenido(),
-        ],
-      ),
+      body: Column(children: [_buildBarraFiltros(), _buildContenido()]),
       floatingActionButton: FloatingActionButton(
         onPressed: cargarIncidentes,
         tooltip: 'Actualizar',
@@ -156,9 +151,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildContenido() {
     if (cargando) {
-      return const Expanded(
-        child: Center(child: CircularProgressIndicator()),
-      );
+      return const Expanded(child: Center(child: CircularProgressIndicator()));
     }
     if (error.isNotEmpty) {
       return Expanded(
@@ -200,8 +193,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final icono = incidente['tipo'] == 'bache'
         ? Icons.warning_amber_rounded
         : incidente['tipo'] == 'alumbrado'
-            ? Icons.lightbulb_outline
-            : Icons.water_damage_outlined;
+        ? Icons.lightbulb_outline
+        : Icons.water_damage_outlined;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -220,8 +213,10 @@ class _HomeScreenState extends State<HomeScreen> {
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Zona: ${incidente['zona']}',
-                style: const TextStyle(fontSize: 12)),
+            Text(
+              'Zona: ${incidente['zona']}',
+              style: const TextStyle(fontSize: 12),
+            ),
             Text(
               incidente['estado'].toString().toUpperCase(),
               style: TextStyle(
