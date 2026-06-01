@@ -1,8 +1,8 @@
 # Análisis de código — LojaReport
 
-**Nombre:** <!-- Tu nombre completo aquí -->  
-**Branch:** <!-- El nombre de tu branch: analisis/nombre-apellido -->  
-**Fecha:** <!-- Fecha de entrega -->  
+**Nombre:** Fernado Castillo  
+**Branch:** analisis/fernando-castillo  
+**Fecha:** 1/6/2026  
 **Repositorio base:** https://github.com/richardmijo/eva_loja_reporta.git
 
 ---
