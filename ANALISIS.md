@@ -1,8 +1,8 @@
 # Análisis de código — LojaReport
 
-**Nombre:** <!-- Jhandry Alexis Jaramillo Peñafiel -->  
-**Branch:** <!-- analisis/jhandry-jaramillo -->  
-**Fecha:** <!-- 01/06/2026 -->  
+**Nombre:** Jhandry Alexis Jaramillo Peñafiel  
+**Branch:** analisis/jhandry-jaramillo 
+**Fecha:** 01/06/2026 
 **Repositorio base:** https://github.com/richardmijo/eva_loja_reporta.git
 
 ---
