@@ -84,7 +84,7 @@ Cuando termines, haz push de tu branch y publica la URL en Canvas.
 
 ---
 
-## Resumen de cambios que implementarás el jueves
+## Resumen de cambios que implementarás el miércoles
 
 <!-- Lista los cambios concretos que vas a hacer el jueves, en orden de prioridad.
 Esto es un compromiso: si el jueves tu código va en otra dirección, debes justificarlo. -->
