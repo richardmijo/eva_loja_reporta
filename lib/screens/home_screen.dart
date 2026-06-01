@@ -1,18 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
 
-// DECISIÓN 1: Dio se instancia directamente dentro del widget
-// en lugar de inyectarlo o tenerlo en una capa de servicio separada.
-// Cada vez que el widget se recrea, se crea una nueva instancia de Dio.
-
 class HomeScreen extends StatefulWidget {
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // DECISIÓN 2: Dio instanciado como variable de instancia del State,
-  // sin configuración base (baseUrl, timeouts, interceptors)
   final Dio _dio = Dio();
 
   List<dynamic> incidentes = [];
@@ -20,7 +14,6 @@ class _HomeScreenState extends State<HomeScreen> {
   String error = '';
   String filtro = 'todos';
 
-  // DECISIÓN 3: contador que se incrementa dentro del build()
   int contadorRebuild = 0;
 
   @override
@@ -29,8 +22,6 @@ class _HomeScreenState extends State<HomeScreen> {
     cargarIncidentes();
   }
 
-  // DECISIÓN 4: lógica de red, transformación de datos y manejo de estado
-  // todo mezclado en un solo método dentro del widget
   Future<void> cargarIncidentes() async {
     setState(() {
       cargando = true;
@@ -43,34 +34,12 @@ class _HomeScreenState extends State<HomeScreen> {
       );
 
       if (response.statusCode == 200) {
-        final List<dynamic> datos = response.data;
         setState(() {
-          incidentes = datos.take(20).map((item) {
-            return {
-              'id': item['id'],
-              'titulo': item['title'],
-              'descripcion': item['body'],
-              'tipo': item['id'] % 3 == 0
-                  ? 'bache'
-                  : item['id'] % 3 == 1
-                  ? 'alumbrado'
-                  : 'inundacion',
-              'estado': item['id'] % 2 == 0 ? 'resuelto' : 'pendiente',
-              'zona': item['id'] % 4 == 0
-                  ? 'Centro'
-                  : item['id'] % 4 == 1
-                  ? 'El Valle'
-                  : item['id'] % 4 == 2
-                  ? 'Carigán'
-                  : 'Motupe',
-            };
-          }).toList();
+          incidentes = response.data;
           cargando = false;
         });
       }
     } on DioException catch (e) {
-      // DECISIÓN 5: manejo de errores genérico que no distingue
-      // entre error de red, timeout o error del servidor
       setState(() {
         error = 'Error al cargar los incidentes: ${e.message}';
         cargando = false;
@@ -80,13 +49,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<dynamic> get incidentesFiltrados {
     if (filtro == 'todos') return incidentes;
-    return incidentes.where((i) => i['tipo'] == filtro).toList();
+    return incidentes.where((i) => i['type'] == filtro).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    // DECISIÓN 6: lógica ejecutándose dentro del build()
-    // esto corre cada vez que el widget se reconstruye
     contadorRebuild++;
 
     return Scaffold(
@@ -115,10 +82,10 @@ class _HomeScreenState extends State<HomeScreen> {
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
-          _buildChipFiltro('todos', 'Todos'),
-          _buildChipFiltro('bache', 'Baches'),
-          _buildChipFiltro('alumbrado', 'Alumbrado'),
-          _buildChipFiltro('inundacion', 'Inundaciones'),
+          _buildChipFiltro('todos', 'All'),
+          _buildChipFiltro('pothole', 'Potholes'),
+          _buildChipFiltro('lighting', 'Lighting'),
+          _buildChipFiltro('flooding', 'Flooding'),
         ],
       ),
     );
@@ -165,7 +132,7 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: cargarIncidentes,
-                child: const Text('Reintentar'),
+                child: const Text('Retry'),
               ),
             ],
           ),
@@ -174,25 +141,25 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     if (incidentesFiltrados.isEmpty) {
       return const Expanded(
-        child: Center(child: Text('No hay incidentes para este filtro.')),
+        child: Center(child: Text('No incidents found for this filter.')),
       );
     }
+
     return Expanded(
-      child: ListView.builder(
-        itemCount: incidentesFiltrados.length,
-        itemBuilder: (context, index) {
-          return _buildTarjetaIncidente(incidentesFiltrados[index]);
-        },
+      child: ListView(
+        children: incidentesFiltrados
+            .map((incidente) => _buildTarjetaIncidente(incidente))
+            .toList(),
       ),
     );
   }
 
-  Widget _buildTarjetaIncidente(Map<String, dynamic> incidente) {
-    final esResuelto = incidente['estado'] == 'resuelto';
+  Widget _buildTarjetaIncidente(dynamic incidente) {
+    final esResuelto = incidente['status'] == 'resolved';
     final colorEstado = esResuelto ? Colors.green : Colors.orange;
-    final icono = incidente['tipo'] == 'bache'
+    final icono = incidente['type'] == 'pothole'
         ? Icons.warning_amber_rounded
-        : incidente['tipo'] == 'alumbrado'
+        : incidente['type'] == 'lighting'
         ? Icons.lightbulb_outline
         : Icons.water_damage_outlined;
 
@@ -205,7 +172,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Icon(icono, color: colorEstado, size: 20),
         ),
         title: Text(
-          incidente['titulo'],
+          incidente['title'] ?? '',
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
@@ -214,11 +181,11 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Zona: ${incidente['zona']}',
+              'Zone: ${incidente['zone'] ?? ''}',
               style: const TextStyle(fontSize: 12),
             ),
             Text(
-              incidente['estado'].toString().toUpperCase(),
+              (incidente['status'] ?? '').toString().toUpperCase(),
               style: TextStyle(
                 color: colorEstado,
                 fontWeight: FontWeight.bold,

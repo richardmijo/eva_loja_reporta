@@ -5,7 +5,7 @@ class AboutScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Acerca de'),
+        title: const Text('About'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(24),
@@ -24,21 +24,21 @@ class AboutScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Versión 1.0.0',
+              'Version 1.0.0',
               style: TextStyle(color: Colors.grey),
             ),
             const SizedBox(height: 20),
             const Text(
-              'LojaReport permite a los ciudadanos de Loja consultar '
-              'incidentes urbanos reportados en la ciudad, incluyendo '
-              'baches, problemas de alumbrado e inundaciones.',
+              'LojaReport allows citizens of Loja to consult urban incidents '
+              'reported in the city, including potholes, lighting problems '
+              'and flooding.',
               style: TextStyle(fontSize: 14, height: 1.6),
             ),
             const SizedBox(height: 32),
             const Divider(),
             const SizedBox(height: 16),
             const Text(
-              'Proyecto de vinculación',
+              'Community project',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),
