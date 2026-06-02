@@ -1,8 +1,8 @@
 # Análisis de código — LojaReport
 
-**Nombre:** <!-- Tu nombre completo aquí -->  
-**Branch:** <!-- El nombre de tu branch: analisis/nombre-apellido -->  
-**Fecha:** <!-- Fecha de entrega -->  
+**Nombre:** <!-- Eduardo Gabbriel Pardo Dávila -->  
+**Branch:** <!-- analisis/Eduardo-Pardo-->  
+**Fecha:** <!-- 01-06-2026-->  
 **Repositorio base:** https://github.com/richardmijo/eva_loja_reporta.git
 
 ---
@@ -20,15 +20,15 @@ Cuando termines, haz push de tu branch y publica la URL en Canvas.
 
 ### 1a) ¿DetailScreen necesita ser StatefulWidget?
 
-<!-- Tu respuesta aquí -->
+Sí, porque actualmente tiene una variable llamada favorito que cambia cuando el usuario presiona el botón de marcador. Para actualizar la interfaz utiliza setState(), por eso necesita ser un StatefulWidget.
 
 ### 1b) El estado problemático
 
-<!-- Tu respuesta aquí -->
+El problema es la variable favorito. Aunque cambia visualmente cuando se presiona el botón, el valor no se guarda en ningún lado. Si el usuario sale de la pantalla y vuelve a entrar, el favorito se pierde.
 
 ### 1c) ¿Qué cambiarías y por qué?
 
-<!-- Tu respuesta aquí -->
+Si la opción de favoritos no es necesaria, convertiría DetailScreen en un StatelessWidget porque solo muestra información. Si se quiere mantener la funcionalidad, guardaría los favoritos en una base de datos o almacenamiento local para que no se pierdan.
 
 ---
 
@@ -36,19 +36,31 @@ Cuando termines, haz push de tu branch y publica la URL en Canvas.
 
 ### 2a) ¿Qué responsabilidades tiene _HomeScreenState?
 
-<!-- Tu respuesta aquí -->
+_HomeScreenState hace muchas cosas al mismo tiempo:
+
+Consume la API con Dio.
+Guarda los incidentes.
+Maneja errores y estados de carga.
+Filtra los datos.
+Construye la interfaz.
+Navega a otras pantallas.
+
 
 ### 2b) El problema de tener Dio dentro del widget
 
-<!-- Tu respuesta aquí -->
+El problema es que la pantalla queda directamente conectada con la API. Si mañana cambia la URL o la forma de consumir los datos, habría que modificar la pantalla. Además, el código es más difícil de mantener.
 
 ### 2c) Lo que no debería estar en build()
 
-<!-- Tu respuesta aquí -->
+Dentro de build() no debería existir lógica que no esté relacionada con la interfaz. Por ejemplo:
+
+contadorRebuild++;
+
+Este contador se ejecuta cada vez que Flutter reconstruye la pantalla y realmente no aporta nada al funcionamiento de la aplicación.
 
 ### 2d) Diseña la solución: cómo reorganizarías el código
 
-<!-- Tu respuesta aquí — sé específico: qué clases crearías, qué métodos tendrían, cómo se conectarían con el widget -->
+Crearía una clase llamada IncidentService para encargarse de las consultas a la API y una clase Incident para representar los datos de un incidente. De esta forma HomeScreen solo se encargaría de mostrar la información en pantalla y no de obtenerla directamente.
 
 ---
 
@@ -56,15 +68,20 @@ Cuando termines, haz push de tu branch y publica la URL en Canvas.
 
 ### 3a) ¿Qué tipo de dato se pasa entre pantallas y qué riesgo tiene?
 
-<!-- Tu respuesta aquí -->
+Actualmente se pasa un Map<String, dynamic>. El problema es que no existe control de tipos y si una clave cambia de nombre o no existe, el error aparecerá cuando la aplicación se esté ejecutando.
 
 ### 3b) El botón que hace algo cuestionable
 
-<!-- Tu respuesta aquí -->
+El botón "Back to home" utiliza:
+
+Navigator.pushNamed(context, '/');
+
+Esto crea una nueva pantalla de inicio en lugar de regresar a la anterior. Lo correcto sería usar:
+
+Navigator.pop(context);
 
 ### 3c) ¿Cómo mejorarías el paso de datos?
-
-<!-- Tu respuesta aquí — incluye cómo se vería el modelo que propones -->
+Crearía una clase Incident con atributos como título, zona, estado y descripción. Así se enviaría un objeto completo entre pantallas en lugar de un mapa genérico, haciendo el código más seguro y fácil de mantener.
 
 ---
 
@@ -72,24 +89,26 @@ Cuando termines, haz push de tu branch y publica la URL en Canvas.
 
 ### 4a) ¿Cuántas instancias de Dio existen en la app y qué problema genera?
 
-<!-- Tu respuesta aquí -->
+Existen dos instancias de Dio, una en HomeScreen y otra en DetailScreen. Además, la de DetailScreen ni siquiera se utiliza. Esto genera código innecesario y dificulta centralizar la configuración.
 
 ### 4b) ¿Qué le falta a la configuración actual de Dio?
 
-<!-- Tu respuesta aquí -->
+Le faltan configuraciones importantes como:
+
+URL base centralizada.
+Tiempo de espera (timeout).
+Manejo global de errores.
+Interceptores para registrar peticiones y respuestas.
 
 ### 4c) Diseña cómo centralizarías Dio para toda la app
 
-<!-- Tu respuesta aquí — describe la estructura, no hace falta código completo -->
+Crearía una clase llamada ApiClient que tenga una sola instancia de Dio configurada. Luego los servicios utilizarían esa instancia para hacer las peticiones. Así, si en el futuro hay que cambiar algo de la configuración, solo se modifica en un lugar.
 
 ---
 
 ## Resumen de cambios que implementarás el miércoles
 
-<!-- Lista los cambios concretos que vas a hacer el jueves, en orden de prioridad.
-Esto es un compromiso: si el jueves tu código va en otra dirección, debes justificarlo. -->
-
-1. 
-2. 
-3. 
-4. 
+1. Crear una clase Incident para evitar el uso de Map<String, dynamic>.
+2. Crear un servicio para separar las consultas a la API de las pantallas.
+3. Centralizar la configuración de Dio en una sola clase.
+4. Cambiar el botón de regreso para que use Navigator.pop() en lugar de crear una nueva pantalla de inicio.
