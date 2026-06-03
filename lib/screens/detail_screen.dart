@@ -1,34 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
+import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 
-class DetailScreen extends StatefulWidget {
-  @override
-  _DetailScreenState createState() => _DetailScreenState();
-}
+import '../models/incident.dart';
 
-class _DetailScreenState extends State<DetailScreen> {
-  final Dio _dio = Dio();
+class DetailScreen extends StatelessWidget {
+  const DetailScreen({super.key, required this.incident});
 
-  bool favorito = false;
+  final Incident incident;
+
+  Future<void> _shareIncident(BuildContext context) async {
+    await Share.share(incident.shareMessage);
+
+    if (!context.mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Incident shared successfully'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final incidente =
-        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-
-    final esResuelto = incidente['status'] == 'resolved';
-    final colorEstado = esResuelto ? Colors.green : Colors.orange;
+    final colorEstado = incident.isResolved ? Colors.green : Colors.orange;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Incident Detail'),
         actions: [
           IconButton(
-            icon: Icon(
-              favorito ? Icons.bookmark : Icons.bookmark_border,
-              color: Colors.white,
-            ),
-            onPressed: () => setState(() => favorito = !favorito),
+            icon: const Icon(Icons.share),
+            onPressed: () => _shareIncident(context),
           ),
         ],
       ),
@@ -37,20 +41,20 @@ class _DetailScreenState extends State<DetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildEtiquetaTipo(incidente['type'] ?? '', colorEstado),
+            _typeTag(incident.typeLabel, colorEstado),
             const SizedBox(height: 16),
             Text(
-              incidente['title'] ?? '',
+              incident.title,
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-            _buildFila(Icons.location_on, 'Zone', incidente['zone'] ?? ''),
+            _row(Icons.location_on, 'Zone', incident.zone),
             const SizedBox(height: 12),
-            _buildFila(
-              esResuelto ? Icons.check_circle : Icons.pending,
+            _row(
+              incident.isResolved ? Icons.check_circle : Icons.pending,
               'Status',
-              (incidente['status'] ?? '').toString().toUpperCase(),
-              colorValor: colorEstado,
+              incident.status.toUpperCase(),
+              valueColor: colorEstado,
             ),
             const SizedBox(height: 24),
             const Text(
@@ -59,14 +63,14 @@ class _DetailScreenState extends State<DetailScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              incidente['description'] ?? '',
+              incident.description,
               style: const TextStyle(fontSize: 14, height: 1.6),
             ),
             const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () => Navigator.pushNamed(context, '/'),
+                onPressed: () => context.pop(),
                 icon: const Icon(Icons.arrow_back),
                 label: const Text('Back to home'),
               ),
@@ -77,22 +81,16 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
-  Widget _buildEtiquetaTipo(String tipo, Color color) {
-    final etiqueta = tipo == 'pothole'
-        ? 'Pothole'
-        : tipo == 'lighting'
-        ? 'Lighting'
-        : 'Flooding';
-
+  Widget _typeTag(String label, Color color) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Text(
-        etiqueta.toUpperCase(),
+        label.toUpperCase(),
         style: TextStyle(
           color: color,
           fontWeight: FontWeight.bold,
@@ -103,27 +101,27 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
-  Widget _buildFila(
-    IconData icono,
-    String etiqueta,
-    String valor, {
-    Color? colorValor,
+  Widget _row(
+    IconData icon,
+    String label,
+    String value, {
+    Color? valueColor,
   }) {
     return Row(
       children: [
-        Icon(icono, size: 18, color: Colors.grey),
+        Icon(icon, size: 18, color: Colors.grey),
         const SizedBox(width: 8),
         Text(
-          '$etiqueta: ',
+          '$label: ',
           style: const TextStyle(color: Colors.grey, fontSize: 14),
         ),
         Expanded(
           child: Text(
-            valor,
+            value,
             style: TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 14,
-              color: colorValor,
+              color: valueColor,
             ),
           ),
         ),
