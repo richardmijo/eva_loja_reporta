@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
 import 'package:go_router/go_router.dart';
+import '../controllers/incident_controller.dart';
 import '../models/incident.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -11,70 +11,78 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final Dio _dio = Dio();
-
-  List<dynamic> incidentes = [];
-  bool cargando = false;
-  String error = '';
-  String filtro = 'todos';
-
-  int contadorRebuild = 0;
+  final IncidentController _controller = IncidentController();
 
   @override
   void initState() {
     super.initState();
-    cargarIncidentes();
-  }
-
-  Future<void> cargarIncidentes() async {
-    setState(() {
-      cargando = true;
-      error = '';
-    });
-
-    try {
-      final response = await _dio.get(
-        'https://6a1cf27ebcc4f20d5ca3b7bc.mockapi.io/api/v1/incidents',
-      );
-
-      if (response.statusCode == 200) {
-        setState(() {
-          incidentes = response.data;
-          cargando = false;
-        });
-      }
-    } on DioException catch (e) {
-      setState(() {
-        error = 'Error al cargar los incidentes: ${e.message}';
-        cargando = false;
-      });
-    }
-  }
-
-  List<dynamic> get incidentesFiltrados {
-    if (filtro == 'todos') return incidentes;
-    return incidentes.where((i) => i['type'] == filtro).toList();
+    _controller.fetchIncidents();
   }
 
   @override
   Widget build(BuildContext context) {
-    contadorRebuild++;
-
     return Scaffold(
       appBar: AppBar(
-        title: Text('LojaReport'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.info_outline),
-            onPressed: () => context.push('/about'),
+        title: const Text('LojaReport'),
+      ),
+      drawer: _buildDrawer(context),
+      body: ListenableBuilder(
+        listenable: _controller,
+        builder: (context, _) {
+          return Column(
+            children: [
+              _buildBarraFiltros(),
+              _buildContenido(),
+            ],
+          );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _controller.fetchIncidents,
+        tooltip: 'Actualizar',
+        child: const Icon(Icons.refresh),
+      ),
+    );
+  }
+
+  Widget _buildDrawer(BuildContext context) {
+    return Drawer(
+      child: Column(
+        children: [
+          const UserAccountsDrawerHeader(
+            accountName: Text(
+              'Gabriel Sarango',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+            ),
+            accountEmail: Text('gabriel.sarango@uide.edu.ec'),
+            currentAccountPicture: CircleAvatar(
+              backgroundColor: Colors.white,
+              child: Icon(Icons.person, color: Colors.blue, size: 40),
+            ),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [Colors.blue, Colors.blueAccent],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.home, color: Colors.blue),
+            title: const Text('Inicio'),
+            onTap: () {
+              Navigator.pop(context); // Cerrar Drawer
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.info, color: Colors.blue),
+            title: const Text('Información'),
+            onTap: () {
+              Navigator.pop(context); // Cerrar Drawer
+              context.push('/about');
+            },
           ),
         ],
-      ),
-      body: Column(children: [_buildBarraFiltros(), _buildContenido()]),
-      floatingActionButton: FloatingActionButton(
-        onPressed: cargarIncidentes,
-        tooltip: 'Actualizar',
-        child: Icon(Icons.refresh),
       ),
     );
   }
@@ -96,11 +104,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildChipFiltro(String valor, String etiqueta) {
-    final seleccionado = filtro == valor;
+    final seleccionado = _controller.filter == valor;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
       child: GestureDetector(
-        onTap: () => setState(() => filtro = valor),
+        onTap: () => _controller.setFilter(valor),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
           decoration: BoxDecoration(
@@ -121,10 +129,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildContenido() {
-    if (cargando) {
+    if (_controller.isLoading) {
       return const Expanded(child: Center(child: CircularProgressIndicator()));
     }
-    if (error.isNotEmpty) {
+    if (_controller.error.isNotEmpty) {
       return Expanded(
         child: Center(
           child: Column(
@@ -132,10 +140,17 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               const Icon(Icons.wifi_off, size: 48, color: Colors.grey),
               const SizedBox(height: 12),
-              Text(error, style: const TextStyle(color: Colors.grey)),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Text(
+                  _controller.error,
+                  style: const TextStyle(color: Colors.grey),
+                  textAlign: TextAlign.center,
+                ),
+              ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: cargarIncidentes,
+                onPressed: _controller.fetchIncidents,
                 child: const Text('Retry'),
               ),
             ],
@@ -143,29 +158,31 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     }
-    if (incidentesFiltrados.isEmpty) {
+    if (_controller.filteredIncidents.isEmpty) {
       return const Expanded(
         child: Center(child: Text('No incidents found for this filter.')),
       );
     }
 
     return Expanded(
-      child: ListView(
-        children: incidentesFiltrados
-            .map((incidente) => _buildTarjetaIncidente(incidente))
-            .toList(),
+      child: ListView.builder(
+        itemCount: _controller.filteredIncidents.length,
+        itemBuilder: (context, index) {
+          final incident = _controller.filteredIncidents[index];
+          return _buildTarjetaIncidente(incident);
+        },
       ),
     );
   }
 
-  Widget _buildTarjetaIncidente(dynamic incidente) {
-    final esResuelto = incidente['status'] == 'resolved';
+  Widget _buildTarjetaIncidente(Incident incident) {
+    final esResuelto = incident.status == 'resolved';
     final colorEstado = esResuelto ? Colors.green : Colors.orange;
-    final icono = incidente['type'] == 'pothole'
+    final icono = incident.type == 'pothole'
         ? Icons.warning_amber_rounded
-        : incidente['type'] == 'lighting'
-        ? Icons.lightbulb_outline
-        : Icons.water_damage_outlined;
+        : incident.type == 'lighting'
+            ? Icons.lightbulb_outline
+            : Icons.water_damage_outlined;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -176,7 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: Icon(icono, color: colorEstado, size: 20),
         ),
         title: Text(
-          incidente['title'] ?? '',
+          incident.title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
@@ -185,11 +202,11 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Zone: ${incidente['zone'] ?? ''}',
+              'Zone: ${incident.zone}',
               style: const TextStyle(fontSize: 12),
             ),
             Text(
-              (incidente['status'] ?? '').toString().toUpperCase(),
+              incident.status.toUpperCase(),
               style: TextStyle(
                 color: colorEstado,
                 fontWeight: FontWeight.bold,
@@ -200,8 +217,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         trailing: const Icon(Icons.arrow_forward_ios, size: 14),
         onTap: () {
-          final incidentObj = Incident.fromJson(incidente as Map<String, dynamic>);
-          context.push('/detail', extra: incidentObj);
+          context.push('/detail', extra: incident);
         },
       ),
     );
