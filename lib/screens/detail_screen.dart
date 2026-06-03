@@ -1,34 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
+import 'package:flutter/services.dart';
+import '../models/incident.dart';
 
-class DetailScreen extends StatefulWidget {
-  @override
-  _DetailScreenState createState() => _DetailScreenState();
-}
+class DetailScreen extends StatelessWidget {
+  final Incident incident;
 
-class _DetailScreenState extends State<DetailScreen> {
-  final Dio _dio = Dio();
-
-  bool favorito = false;
+  const DetailScreen({super.key, required this.incident});
 
   @override
   Widget build(BuildContext context) {
-    final incidente =
-        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-
-    final esResuelto = incidente['status'] == 'resolved';
-    final colorEstado = esResuelto ? Colors.green : Colors.orange;
+    final colorEstado = incident.isResolved ? Colors.green : Colors.orange;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Incident Detail'),
         actions: [
           IconButton(
-            icon: Icon(
-              favorito ? Icons.bookmark : Icons.bookmark_border,
-              color: Colors.white,
-            ),
-            onPressed: () => setState(() => favorito = !favorito),
+            icon: const Icon(Icons.share),
+            onPressed: () => _shareIncident(context),
           ),
         ],
       ),
@@ -37,19 +26,19 @@ class _DetailScreenState extends State<DetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildEtiquetaTipo(incidente['type'] ?? '', colorEstado),
+            _buildEtiquetaTipo(incident.type, colorEstado),
             const SizedBox(height: 16),
             Text(
-              incidente['title'] ?? '',
+              incident.title,
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-            _buildFila(Icons.location_on, 'Zone', incidente['zone'] ?? ''),
+            _buildFila(Icons.location_on, 'Zone', incident.zone),
             const SizedBox(height: 12),
             _buildFila(
-              esResuelto ? Icons.check_circle : Icons.pending,
+              incident.isResolved ? Icons.check_circle : Icons.pending,
               'Status',
-              (incidente['status'] ?? '').toString().toUpperCase(),
+              incident.status.toUpperCase(),
               colorValor: colorEstado,
             ),
             const SizedBox(height: 24),
@@ -59,20 +48,28 @@ class _DetailScreenState extends State<DetailScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              incidente['description'] ?? '',
+              incident.description,
               style: const TextStyle(fontSize: 14, height: 1.6),
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => Navigator.pushNamed(context, '/'),
-                icon: const Icon(Icons.arrow_back),
-                label: const Text('Back to home'),
-              ),
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _shareIncident(BuildContext context) {
+    final emoji = incident.isResolved ? '✅' : '🔴';
+    final text =
+        '$emoji Incident in ${incident.zone}: ${incident.title}\n'
+        'Status: ${incident.status}\n'
+        'Reported on LojaReport · Loja, Ecuador';
+
+    Clipboard.setData(ClipboardData(text: text));
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Copied to clipboard'),
+        duration: Duration(seconds: 2),
       ),
     );
   }
@@ -81,15 +78,15 @@ class _DetailScreenState extends State<DetailScreen> {
     final etiqueta = tipo == 'pothole'
         ? 'Pothole'
         : tipo == 'lighting'
-        ? 'Lighting'
-        : 'Flooding';
+            ? 'Lighting'
+            : 'Flooding';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Text(
         etiqueta.toUpperCase(),

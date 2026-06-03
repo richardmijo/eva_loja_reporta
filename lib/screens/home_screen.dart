@@ -1,20 +1,22 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
+import 'package:go_router/go_router.dart';
+import '../models/incident.dart';
+import '../services/api_service.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final Dio _dio = Dio();
+  final ApiService _apiService = ApiService();
 
-  List<dynamic> incidentes = [];
+  List<Incident> incidentes = [];
   bool cargando = false;
   String error = '';
   String filtro = 'todos';
-
-  int contadorRebuild = 0;
 
   @override
   void initState() {
@@ -29,48 +31,82 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      final response = await _dio.get(
-        'https://6a1cf27ebcc4f20d5ca3b7bc.mockapi.io/api/v1/incidents',
-      );
-
-      if (response.statusCode == 200) {
-        setState(() {
-          incidentes = response.data;
-          cargando = false;
-        });
-      }
-    } on DioException catch (e) {
+      final data = await _apiService.getIncidents();
       setState(() {
-        error = 'Error al cargar los incidentes: ${e.message}';
+        incidentes = data;
+        cargando = false;
+      });
+    } catch (e) {
+      setState(() {
+        error = 'Error loading incidents: ${e.toString()}';
         cargando = false;
       });
     }
   }
 
-  List<dynamic> get incidentesFiltrados {
+  List<Incident> get incidentesFiltrados {
     if (filtro == 'todos') return incidentes;
-    return incidentes.where((i) => i['type'] == filtro).toList();
+    return incidentes.where((i) => i.type == filtro).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    contadorRebuild++;
-
     return Scaffold(
       appBar: AppBar(
-        title: Text('LojaReport'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.info_outline),
-            onPressed: () => Navigator.pushNamed(context, '/about'),
-          ),
+        title: const Text('LojaReport'),
+      ),
+      drawer: _buildDrawer(),
+      body: Column(
+        children: [
+          _buildBarraFiltros(),
+          _buildContenido(),
         ],
       ),
-      body: Column(children: [_buildBarraFiltros(), _buildContenido()]),
       floatingActionButton: FloatingActionButton(
         onPressed: cargarIncidentes,
-        tooltip: 'Actualizar',
-        child: Icon(Icons.refresh),
+        tooltip: 'Refresh',
+        child: const Icon(Icons.refresh),
+      ),
+    );
+  }
+
+  Widget _buildDrawer() {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          const UserAccountsDrawerHeader(
+            accountName: Text('Jhandry Becerra'),
+            accountEmail: Text('jhandry.becerra@uide.edu.ec'),
+            currentAccountPicture: CircleAvatar(
+              backgroundColor: Colors.white,
+              child: Text(
+                'JB',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue,
+                ),
+              ),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.home),
+            title: const Text('Inicio'),
+            onTap: () {
+              Navigator.pop(context);
+              context.go('/');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.info),
+            title: const Text('Información'),
+            onTap: () {
+              Navigator.pop(context);
+              context.push('/about');
+            },
+          ),
+        ],
       ),
     );
   }
@@ -146,33 +182,33 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return Expanded(
-      child: ListView(
-        children: incidentesFiltrados
-            .map((incidente) => _buildTarjetaIncidente(incidente))
-            .toList(),
+      child: ListView.builder(
+        itemCount: incidentesFiltrados.length,
+        itemBuilder: (context, index) {
+          return _buildTarjetaIncidente(incidentesFiltrados[index]);
+        },
       ),
     );
   }
 
-  Widget _buildTarjetaIncidente(dynamic incidente) {
-    final esResuelto = incidente['status'] == 'resolved';
-    final colorEstado = esResuelto ? Colors.green : Colors.orange;
-    final icono = incidente['type'] == 'pothole'
+  Widget _buildTarjetaIncidente(Incident incidente) {
+    final colorEstado = incidente.isResolved ? Colors.green : Colors.orange;
+    final icono = incidente.type == 'pothole'
         ? Icons.warning_amber_rounded
-        : incidente['type'] == 'lighting'
-        ? Icons.lightbulb_outline
-        : Icons.water_damage_outlined;
+        : incidente.type == 'lighting'
+            ? Icons.lightbulb_outline
+            : Icons.water_damage_outlined;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       elevation: 2,
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: colorEstado.withOpacity(0.15),
+          backgroundColor: colorEstado.withValues(alpha: 0.15),
           child: Icon(icono, color: colorEstado, size: 20),
         ),
         title: Text(
-          incidente['title'] ?? '',
+          incidente.title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
@@ -181,11 +217,11 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Zone: ${incidente['zone'] ?? ''}',
+              'Zone: ${incidente.zone}',
               style: const TextStyle(fontSize: 12),
             ),
             Text(
-              (incidente['status'] ?? '').toString().toUpperCase(),
+              incidente.status.toUpperCase(),
               style: TextStyle(
                 color: colorEstado,
                 fontWeight: FontWeight.bold,
@@ -196,7 +232,7 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         trailing: const Icon(Icons.arrow_forward_ios, size: 14),
         onTap: () {
-          Navigator.pushNamed(context, '/detail', arguments: incidente);
+          context.push('/detail', extra: incidente);
         },
       ),
     );
