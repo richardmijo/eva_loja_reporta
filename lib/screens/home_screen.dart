@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:go_router/go_router.dart';
+import '../models/incident.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
   _HomeScreenState createState() => _HomeScreenState();
 }
@@ -61,8 +65,8 @@ class _HomeScreenState extends State<HomeScreen> {
         title: Text('LojaReport'),
         actions: [
           IconButton(
-            icon: Icon(Icons.info_outline),
-            onPressed: () => Navigator.pushNamed(context, '/about'),
+            icon: const Icon(Icons.info_outline),
+            onPressed: () => context.push('/about'),
           ),
         ],
       ),
@@ -196,7 +200,8 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         trailing: const Icon(Icons.arrow_forward_ios, size: 14),
         onTap: () {
-          Navigator.pushNamed(context, '/detail', arguments: incidente);
+          final incidentObj = Incident.fromJson(incidente as Map<String, dynamic>);
+          context.push('/detail', extra: incidentObj);
         },
       ),
     );
