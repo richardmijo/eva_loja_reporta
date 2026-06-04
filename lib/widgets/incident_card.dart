@@ -14,13 +14,10 @@ class IncidentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorEstado = incident.isResolved ? Colors.green : Colors.orange;
-    final icono = switch (incident.type) {
-      'pothole' => Icons.warning_amber_rounded,
-      'lighting' => Icons.lightbulb_outline,
-      'flooding' => Icons.water_damage_outlined,
-      _ => Icons.report_outlined,
-    };
+    final colorEstado = incident.isResolved ? Colors.green : Colors.red;
+    final statusIcon = incident.isResolved
+        ? Icon(Icons.check_circle, color: colorEstado, size: 20)
+        : Icon(Icons.circle, color: colorEstado, size: 16);
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -28,7 +25,7 @@ class IncidentCard extends StatelessWidget {
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: colorEstado.withValues(alpha: 0.15),
-          child: Icon(icono, color: colorEstado, size: 20),
+          child: statusIcon,
         ),
         title: Text(
           incident.title,
