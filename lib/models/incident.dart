@@ -41,11 +41,7 @@ class Incident {
     }
   }
 
-  String get shareMessage =>
-      '[LojaReport] Urban incident\n'
-      'Title: $title\n'
-      'Type: $typeLabel\n'
-      'Zone: $zone\n'
-      'Status: ${status.toUpperCase()}\n'
-      'Description: $description';
+  String get clipboardMessage =>
+      'Incident in $zone: $title Stotus: $status) '
+      'Reported on LojaReport - Loja, Ecuadar';
 }
