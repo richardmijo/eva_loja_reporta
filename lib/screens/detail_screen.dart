@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../models/incident.dart';
 import '../controllers/incident_controller.dart';
 
 class DetailScreen extends StatelessWidget {
-  const DetailScreen({super.key});
+  final Incident incidentArg;
+
+  const DetailScreen({super.key, required this.incidentArg});
 
   @override
   Widget build(BuildContext context) {
-    final incidentArg =
-        ModalRoute.of(context)!.settings.arguments as Incident;
-
     final controller = IncidentController();
 
     return ListenableBuilder(
@@ -70,7 +70,7 @@ class DetailScreen extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton.icon(
-                    onPressed: () => Navigator.pop(context),
+                    onPressed: () => context.pop(),
                     icon: const Icon(Icons.arrow_back),
                     label: const Text('Back to home'),
                   ),
