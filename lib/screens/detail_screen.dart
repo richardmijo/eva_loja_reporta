@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../models/incident.dart';
 import '../controllers/incident_controller.dart';
@@ -25,6 +26,25 @@ class DetailScreen extends StatelessWidget {
           appBar: AppBar(
             title: const Text('Incident Detail'),
             actions: [
+              IconButton(
+                icon: const Icon(Icons.share),
+                tooltip: 'Share',
+                onPressed: () async {
+                  final emoji = incident.status == 'resolved' ? '✅' : '🔴';
+                  final textToCopy =
+                      '$emoji Incident in ${incident.zone}: ${incident.title} '
+                      'Status: ${incident.status} Reported on LojaReport · Loja, Ecuador';
+                  await Clipboard.setData(ClipboardData(text: textToCopy));
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Copied to clipboard'),
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
+                },
+              ),
               IconButton(
                 icon: Icon(
                   isFavorite ? Icons.bookmark : Icons.bookmark_border,

@@ -40,7 +40,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 'Fernando Castillo',
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
-              accountEmail: Text('fernando.castillo@uide.edu.ec'),
+              accountEmail: Text('fecastilloar@uide.edu.ec'),
               currentAccountPicture: CircleAvatar(
                 backgroundColor: Colors.white,
                 child: Icon(Icons.person, size: 40, color: Colors.blue),
