@@ -1,79 +1,85 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
+import '../models/incident.dart';
+import '../controllers/incident_controller.dart';
 
-class DetailScreen extends StatefulWidget {
-  @override
-  _DetailScreenState createState() => _DetailScreenState();
-}
-
-class _DetailScreenState extends State<DetailScreen> {
-  final Dio _dio = Dio();
-
-  bool favorito = false;
+class DetailScreen extends StatelessWidget {
+  const DetailScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final incidente =
-        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final incidentArg =
+        ModalRoute.of(context)!.settings.arguments as Incident;
 
-    final esResuelto = incidente['status'] == 'resolved';
-    final colorEstado = esResuelto ? Colors.green : Colors.orange;
+    final controller = IncidentController();
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Incident Detail'),
-        actions: [
-          IconButton(
-            icon: Icon(
-              favorito ? Icons.bookmark : Icons.bookmark_border,
-              color: Colors.white,
-            ),
-            onPressed: () => setState(() => favorito = !favorito),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildEtiquetaTipo(incidente['type'] ?? '', colorEstado),
-            const SizedBox(height: 16),
-            Text(
-              incidente['title'] ?? '',
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 20),
-            _buildFila(Icons.location_on, 'Zone', incidente['zone'] ?? ''),
-            const SizedBox(height: 12),
-            _buildFila(
-              esResuelto ? Icons.check_circle : Icons.pending,
-              'Status',
-              (incidente['status'] ?? '').toString().toUpperCase(),
-              colorValor: colorEstado,
-            ),
-            const SizedBox(height: 24),
-            const Text(
-              'Description',
-              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              incidente['description'] ?? '',
-              style: const TextStyle(fontSize: 14, height: 1.6),
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => Navigator.pushNamed(context, '/'),
-                icon: const Icon(Icons.arrow_back),
-                label: const Text('Back to home'),
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (context, _) {
+        final incident = controller.findById(incidentArg.id) ?? incidentArg;
+        final isFavorite = incident.isFavorite;
+
+        final esResuelto = incident.status == 'resolved';
+        final colorEstado = esResuelto ? Colors.green : Colors.orange;
+
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('Incident Detail'),
+            actions: [
+              IconButton(
+                icon: Icon(
+                  isFavorite ? Icons.bookmark : Icons.bookmark_border,
+                  color: Colors.white,
+                ),
+                onPressed: () {
+                  controller.toggleFavorite(incident.id);
+                },
               ),
+            ],
+          ),
+          body: SingleChildScrollView(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _buildEtiquetaTipo(incident.type, colorEstado),
+                const SizedBox(height: 16),
+                Text(
+                  incident.title,
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 20),
+                _buildFila(Icons.location_on, 'Zone', incident.zone),
+                const SizedBox(height: 12),
+                _buildFila(
+                  esResuelto ? Icons.check_circle : Icons.pending,
+                  'Status',
+                  incident.status.toUpperCase(),
+                  colorValor: colorEstado,
+                ),
+                const SizedBox(height: 24),
+                const Text(
+                  'Description',
+                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  incident.description,
+                  style: const TextStyle(fontSize: 14, height: 1.6),
+                ),
+                const SizedBox(height: 32),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.arrow_back),
+                    label: const Text('Back to home'),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
+          ),
+        );
+      },
     );
   }
 
