@@ -1,27 +1,23 @@
 import 'package:flutter/material.dart';
-import 'screens/home_screen.dart';
-import 'screens/detail_screen.dart';
-import 'screens/about_screen.dart';
+
+import 'router/app_router.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(const MyApp());
 }
 
 class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'LojaReport',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      initialRoute: '/',
-      routes: {
-        '/': (context) => HomeScreen(),
-        '/detail': (context) => DetailScreen(),
-        '/about': (context) => AboutScreen(),
-      },
+      routerConfig: appRouter,
     );
   }
 }
