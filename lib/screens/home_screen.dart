@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../controllers/incident_controller.dart';
 import '../widgets/filter_bar.dart';
 import '../widgets/incident_card.dart';
+import '../widgets/app_drawer.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -27,10 +29,11 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.info_outline),
-            onPressed: () => Navigator.pushNamed(context, '/about'),
+            onPressed: () => context.push('/about'),
           ),
         ],
       ),
+      drawer: const AppDrawer(),
       body: Column(
         children: [
           FilterBar(),

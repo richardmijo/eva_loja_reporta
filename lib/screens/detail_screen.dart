@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../models/incident.dart';
 import '../controllers/incident_controller.dart';
 
@@ -65,7 +66,7 @@ class DetailScreen extends StatelessWidget {
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () => Navigator.pop(context),
+                onPressed: () => context.pop(),
                 icon: const Icon(Icons.arrow_back),
                 label: const Text('Back to home'),
               ),

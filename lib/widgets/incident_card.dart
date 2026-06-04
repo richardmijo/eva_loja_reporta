@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../models/incident.dart';
 
 class IncidentCard extends StatelessWidget {
@@ -50,7 +51,7 @@ class IncidentCard extends StatelessWidget {
         ),
         trailing: const Icon(Icons.arrow_forward_ios, size: 14),
         onTap: () {
-          Navigator.pushNamed(context, '/detail', arguments: incident);
+          context.push('/detail', extra: incident);
         },
       ),
     );
