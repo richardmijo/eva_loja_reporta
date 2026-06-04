@@ -1,30 +1,36 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
 import 'package:eva_loja_reporta/main.dart';
+import 'package:eva_loja_reporta/controllers/incident_controller.dart';
+import 'package:eva_loja_reporta/repositories/incident_repository.dart';
+import 'package:eva_loja_reporta/models/incident.dart';
+
+class MockIncidentRepository extends IncidentRepository {
+  @override
+  Future<List<Incident>> fetchIncidents() async {
+    return [
+      Incident(
+        id: '1',
+        title: 'Mock Title Pothole',
+        description: 'Mock Description',
+        type: 'pothole',
+        status: 'pending',
+        zone: 'Centro',
+      ),
+    ];
+  }
+}
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
+  setUp(() {
+    IncidentController().repository = MockIncidentRepository();
+  });
+
+  testWidgets('App title smoke test', (WidgetTester tester) async {
     // Build our app and trigger a frame.
     await tester.pumpWidget(const MyApp());
+    await tester.pump(); // Allow state changes/loading to resolve
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify that our app bar title is LojaReport.
+    expect(find.text('LojaReport'), findsOneWidget);
   });
 }
