@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
 import 'package:go_router/go_router.dart';
+import '../services/incident_service.dart';
+import '../models/incident.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -10,12 +11,9 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  static const String apiUrl =
-      'https://6a1cf27ebcc4f20d5ca3b7bc.mockapi.io/api/v1/incidents';
+  final IncidentService _service = IncidentService();
 
-  final Dio _dio = Dio();
-
-  List<dynamic> incidentes = [];
+  List<Incident> incidentes = [];
   bool cargando = false;
   String error = '';
   String filtro = 'todos';
@@ -33,26 +31,22 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      final response = await _dio.get(apiUrl);
-
-      if (response.statusCode == 200) {
-        setState(() {
-          incidentes = response.data;
-          cargando = false;
-        });
-      }
-    } on DioException catch (e) {
+      final data = await _service.getIncidents();
       setState(() {
-        error = 'Error al cargar incidentes: ${e.message}';
+        incidentes = data;
+        cargando = false;
+      });
+    } catch (e) {
+      setState(() {
+        error = 'Error al cargar incidentes';
         cargando = false;
       });
     }
   }
 
-  List<dynamic> get incidentesFiltrados {
+  List<Incident> get incidentesFiltrados {
     if (filtro == 'todos') return incidentes;
-
-    return incidentes.where((i) => i['type'] == filtro).toList();
+    return incidentes.where((i) => i.type == filtro).toList();
   }
 
   @override
@@ -122,7 +116,6 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildChipFiltro(String valor, String etiqueta) {
     final seleccionado = filtro == valor;
-
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
       child: GestureDetector(
@@ -189,14 +182,13 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildTarjetaIncidente(dynamic incidente) {
-    final esResuelto = incidente['status'] == 'resolved';
-
+  Widget _buildTarjetaIncidente(Incident incidente) {
+    final esResuelto = incidente.status == 'resolved';
     final colorEstado = esResuelto ? Colors.green : Colors.orange;
 
-    final icono = incidente['type'] == 'pothole'
+    final icono = incidente.type == 'pothole'
         ? Icons.warning_amber_rounded
-        : incidente['type'] == 'lighting'
+        : incidente.type == 'lighting'
         ? Icons.lightbulb_outline
         : Icons.water_damage_outlined;
 
@@ -207,20 +199,20 @@ class _HomeScreenState extends State<HomeScreen> {
           backgroundColor: colorEstado.withOpacity(0.15),
           child: Icon(icono, color: colorEstado),
         ),
-        title: Text(incidente['title'] ?? ''),
+        title: Text(incidente.title),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Zone: ${incidente['zone']}'),
+            Text('Zone: ${incidente.zone}'),
             Text(
-              (incidente['status'] ?? '').toString().toUpperCase(),
+              incidente.status.toUpperCase(),
               style: TextStyle(color: colorEstado, fontWeight: FontWeight.bold),
             ),
           ],
         ),
         trailing: const Icon(Icons.arrow_forward_ios),
         onTap: () {
-          context.push('/detail', extra: incidente);
+          context.push('/detail', extra: incidente.toMap());
         },
       ),
     );

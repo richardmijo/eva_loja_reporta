@@ -11,9 +11,9 @@ void main() {
 
 final GoRouter router = GoRouter(
   routes: [
-    GoRoute(path: '/', builder: (context, state) => HomeScreen()),
-    GoRoute(path: '/about', builder: (context, state) => AboutScreen()),
-    GoRoute(path: '/detail', builder: (context, state) => DetailScreen()),
+    GoRoute(path: '/', builder: (context, state) => const HomeScreen()),
+    GoRoute(path: '/about', builder: (context, state) => const AboutScreen()),
+    GoRoute(path: '/detail', builder: (context, state) => const DetailScreen()),
   ],
 );
 

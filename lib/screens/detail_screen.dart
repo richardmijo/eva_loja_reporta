@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 
 class DetailScreen extends StatefulWidget {
   const DetailScreen({super.key});
@@ -10,10 +12,41 @@ class DetailScreen extends StatefulWidget {
 class _DetailScreenState extends State<DetailScreen> {
   bool favorito = false;
 
+  void _compartirIncidente(
+    BuildContext context,
+    Map<String, dynamic> incidente,
+  ) {
+    final zone = incidente['zone']?.toString() ?? '';
+    final title = incidente['title']?.toString() ?? '';
+    final status = incidente['status']?.toString().toUpperCase() ?? '';
+    final esResuelto = incidente['status'] == 'resolved';
+
+    final icono = esResuelto ? '✅' : '⏳';
+
+    final texto =
+        '$icono Incident in $zone: $title\nStatus: $status\nReported on LojaReport • Loja, Ecuador';
+
+    Clipboard.setData(ClipboardData(text: texto)).then((_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Copied to clipboard'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    final incidente =
-        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    final incidente = GoRouterState.of(context).extra as Map<String, dynamic>?;
+
+    if (incidente == null) {
+      return const Scaffold(
+        body: Center(child: Text('No incident data received')),
+      );
+    }
 
     final esResuelto = incidente['status'] == 'resolved';
     final colorEstado = esResuelto ? Colors.green : Colors.orange;
@@ -22,6 +55,11 @@ class _DetailScreenState extends State<DetailScreen> {
       appBar: AppBar(
         title: const Text('Incident Detail'),
         actions: [
+          IconButton(
+            icon: const Icon(Icons.share),
+            tooltip: 'Share incident',
+            onPressed: () => _compartirIncidente(context, incidente),
+          ),
           IconButton(
             icon: Icon(favorito ? Icons.bookmark : Icons.bookmark_border),
             onPressed: () {
@@ -37,14 +75,11 @@ class _DetailScreenState extends State<DetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildEtiquetaTipo(
-              incidente['type']?.toString() ?? '',
-              colorEstado,
-            ),
+            _buildEtiquetaTipo(incidente['type']?.toString() ?? '', esResuelto),
             const SizedBox(height: 16),
 
             Text(
-              incidente['title']?.toString() ?? '',
+              incidente['title']?.toString() ?? 'Sin título',
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
 
@@ -53,7 +88,7 @@ class _DetailScreenState extends State<DetailScreen> {
             _buildFila(
               Icons.location_on,
               'Zone',
-              incidente['zone']?.toString() ?? '',
+              incidente['zone']?.toString() ?? 'N/A',
             ),
 
             const SizedBox(height: 12),
@@ -61,7 +96,7 @@ class _DetailScreenState extends State<DetailScreen> {
             _buildFila(
               esResuelto ? Icons.check_circle : Icons.pending,
               'Status',
-              (incidente['status'] ?? '').toString().toUpperCase(),
+              (incidente['status'] ?? 'N/A').toString().toUpperCase(),
               colorValor: colorEstado,
             ),
 
@@ -75,7 +110,9 @@ class _DetailScreenState extends State<DetailScreen> {
             const SizedBox(height: 8),
 
             Text(
-              incidente['description']?.toString() ?? '',
+              incidente['description']?.toString().isNotEmpty == true
+                  ? incidente['description'].toString()
+                  : 'No description available.',
               style: const TextStyle(fontSize: 14, height: 1.6),
             ),
 
@@ -85,7 +122,7 @@ class _DetailScreenState extends State<DetailScreen> {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () {
-                  Navigator.pop(context);
+                  context.pop();
                 },
                 icon: const Icon(Icons.arrow_back),
                 label: const Text('Back'),
@@ -97,21 +134,27 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
-  Widget _buildEtiquetaTipo(String tipo, Color color) {
-    String etiqueta = 'Flooding';
+  Widget _buildEtiquetaTipo(String tipo, bool esResuelto) {
+    String etiqueta;
+    Color color;
 
     if (tipo == 'pothole') {
       etiqueta = 'Pothole';
+      color = esResuelto ? Colors.green : Colors.orange;
     } else if (tipo == 'lighting') {
       etiqueta = 'Lighting';
+      color = esResuelto ? Colors.green : Colors.orange;
+    } else {
+      etiqueta = 'Flooding';
+      color = esResuelto ? Colors.green : Colors.orange;
     }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.15),
+        color: color.withOpacity(0.15),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
+        border: Border.all(color: color.withOpacity(0.4)),
       ),
       child: Text(
         etiqueta.toUpperCase(),
