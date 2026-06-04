@@ -23,7 +23,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('LojaReport'),
+        title: const Text(
+          'LojaReport',
+          style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.5),
+        ),
         actions: [
           IconButton(
             icon: const Icon(Icons.info_outline),
@@ -35,18 +38,25 @@ class _HomeScreenState extends State<HomeScreen> {
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            const UserAccountsDrawerHeader(
-              accountName: Text(
+            UserAccountsDrawerHeader(
+              accountName: const Text(
                 'Fernando Castillo',
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
               ),
-              accountEmail: Text('fecastilloar@uide.edu.ec'),
+              accountEmail: const Text('fecastilloar@uide.edu.ec'),
               currentAccountPicture: CircleAvatar(
                 backgroundColor: Colors.white,
-                child: Icon(Icons.person, size: 40, color: Colors.blue),
+                child: Icon(Icons.person, size: 40, color: Theme.of(context).colorScheme.primary),
               ),
-              decoration: BoxDecoration(
-                color: Colors.blue,
+              decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Color(0xFF1E3A8A), // Deep navy blue
+                    Color(0xFF3B82F6), // Vibrant blue
+                  ],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
               ),
             ),
             ListTile(
@@ -54,7 +64,7 @@ class _HomeScreenState extends State<HomeScreen> {
               title: const Text('Inicio'),
               onTap: () {
                 context.pop();
-                context.go('/');
+                context.go('/home');
               },
             ),
             ListTile(
@@ -84,10 +94,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildBarraFiltros() {
     return Container(
-      height: 50,
-      color: Colors.blue.shade50,
+      height: 56,
+      color: Colors.blue.shade50.withValues(alpha: 0.3),
       child: ListView(
         scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         children: [
           _buildChipFiltro('todos', 'All'),
           _buildChipFiltro('pothole', 'Potholes'),
@@ -100,22 +111,54 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildChipFiltro(String valor, String etiqueta) {
     final seleccionado = _controller.activeFilter == valor;
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    final secondaryColor = Theme.of(context).colorScheme.secondary;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
       child: GestureDetector(
         onTap: () => _controller.setFilter(valor),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           decoration: BoxDecoration(
-            color: seleccionado ? Colors.blue : Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.blue),
+            gradient: seleccionado
+                ? LinearGradient(
+                    colors: [primaryColor, secondaryColor],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : null,
+            color: seleccionado ? null : Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(
+              color: seleccionado ? Colors.transparent : Colors.grey.shade300,
+              width: 1,
+            ),
+            boxShadow: seleccionado
+                ? [
+                    BoxShadow(
+                      color: secondaryColor.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 4),
+                    )
+                  ]
+                : [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.03),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    )
+                  ],
           ),
-          child: Text(
-            etiqueta,
-            style: TextStyle(
-              color: seleccionado ? Colors.white : Colors.blue,
-              fontWeight: FontWeight.w500,
+          child: Center(
+            child: Text(
+              etiqueta,
+              style: TextStyle(
+                color: seleccionado ? Colors.white : Colors.grey.shade700,
+                fontWeight: FontWeight.w600,
+                fontSize: 13,
+              ),
             ),
           ),
         ),
@@ -170,49 +213,91 @@ class _HomeScreenState extends State<HomeScreen> {
         ? Icons.lightbulb_outline
         : Icons.water_damage_outlined;
 
-    return Card(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      elevation: 2,
-      child: ListTile(
-        leading: CircleAvatar(
-          backgroundColor: colorEstado.withOpacity(0.15),
-          child: Icon(icono, color: colorEstado, size: 20),
-        ),
-        title: Text(
-          incidente.title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-        ),
-        subtitle: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Zone: ${incidente.zone}',
-              style: const TextStyle(fontSize: 12),
-            ),
-            Text(
-              incidente.status.toUpperCase(),
-              style: TextStyle(
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              left: BorderSide(
                 color: colorEstado,
-                fontWeight: FontWeight.bold,
-                fontSize: 11,
+                width: 6,
               ),
             ),
-          ],
+          ),
+          child: ListTile(
+            contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            leading: CircleAvatar(
+              backgroundColor: colorEstado.withValues(alpha: 0.1),
+              child: Icon(icono, color: colorEstado, size: 22),
+            ),
+            title: Text(
+              incidente.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+            ),
+            subtitle: Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.location_on_outlined, size: 14, color: Colors.grey),
+                      const SizedBox(width: 4),
+                      Text(
+                        incidente.zone,
+                        style: TextStyle(fontSize: 12, color: Colors.grey.shade600),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: colorEstado.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      incidente.status.toUpperCase(),
+                      style: TextStyle(
+                        color: colorEstado,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 10,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (incidente.isFavorite)
+                  const Icon(Icons.bookmark, color: Colors.amber, size: 20),
+                const SizedBox(width: 8),
+                Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey.shade400),
+              ],
+            ),
+            onTap: () {
+              context.push('/detail', extra: incidente);
+            },
+          ),
         ),
-        trailing: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (incidente.isFavorite)
-              const Icon(Icons.bookmark, color: Colors.orange, size: 18),
-            const SizedBox(width: 4),
-            const Icon(Icons.arrow_forward_ios, size: 14),
-          ],
-        ),
-        onTap: () {
-          context.push('/detail', extra: incidente);
-        },
       ),
     );
   }

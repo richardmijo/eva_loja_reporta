@@ -24,7 +24,10 @@ class DetailScreen extends StatelessWidget {
 
         return Scaffold(
           appBar: AppBar(
-            title: const Text('Incident Detail'),
+            title: const Text(
+              'Detalles del Incidente',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
             actions: [
               IconButton(
                 icon: const Icon(Icons.share),
@@ -48,7 +51,7 @@ class DetailScreen extends StatelessWidget {
               IconButton(
                 icon: Icon(
                   isFavorite ? Icons.bookmark : Icons.bookmark_border,
-                  color: Colors.white,
+                  color: isFavorite ? Colors.amber : Colors.white,
                 ),
                 onPressed: () {
                   controller.toggleFavorite(incident.id);
@@ -57,42 +60,133 @@ class DetailScreen extends StatelessWidget {
             ],
           ),
           body: SingleChildScrollView(
-            padding: const EdgeInsets.all(20),
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildEtiquetaTipo(incident.type, colorEstado),
-                const SizedBox(height: 16),
-                Text(
-                  incident.title,
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 20),
-                _buildFila(Icons.location_on, 'Zone', incident.zone),
-                const SizedBox(height: 12),
-                _buildFila(
-                  esResuelto ? Icons.check_circle : Icons.pending,
-                  'Status',
-                  incident.status.toUpperCase(),
-                  colorValor: colorEstado,
+                // Header details card
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _buildEtiquetaTipo(incident.type, colorEstado),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: colorEstado.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Text(
+                              incident.status.toUpperCase(),
+                              style: TextStyle(
+                                color: colorEstado,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 10,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        incident.title,
+                        style: const TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF0F172A), // Slate 900
+                          height: 1.3,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      const Divider(height: 1),
+                      const SizedBox(height: 20),
+                      _buildFila(Icons.location_on_outlined, 'Zona/Sector', incident.zone),
+                      const SizedBox(height: 12),
+                      _buildFila(
+                        esResuelto ? Icons.check_circle_outline : Icons.pending_actions_outlined,
+                        'Estado actual',
+                        esResuelto ? 'Resuelto' : 'Pendiente de atención',
+                        colorValor: colorEstado,
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 24),
-                const Text(
-                  'Description',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  incident.description,
-                  style: const TextStyle(fontSize: 14, height: 1.6),
+                // Description card
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(20),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.03),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Descripción del Reporte',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: Color(0xFF1E293B), // Slate 800
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        incident.description,
+                        style: TextStyle(
+                          fontSize: 14,
+                          height: 1.6,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
                 const SizedBox(height: 32),
+                // Back button
                 SizedBox(
                   width: double.infinity,
+                  height: 52,
                   child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Theme.of(context).colorScheme.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
                     onPressed: () => context.pop(),
-                    icon: const Icon(Icons.arrow_back),
-                    label: const Text('Back to home'),
+                    icon: const Icon(Icons.arrow_back, size: 18),
+                    label: const Text(
+                      'Volver a la lista',
+                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                    ),
                   ),
                 ),
               ],
@@ -105,25 +199,25 @@ class DetailScreen extends StatelessWidget {
 
   Widget _buildEtiquetaTipo(String tipo, Color color) {
     final etiqueta = tipo == 'pothole'
-        ? 'Pothole'
+        ? 'Bache / Calzada'
         : tipo == 'lighting'
-        ? 'Lighting'
-        : 'Flooding';
+        ? 'Alumbrado Público'
+        : 'Inundación';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.12),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Text(
         etiqueta.toUpperCase(),
         style: TextStyle(
           color: color,
           fontWeight: FontWeight.bold,
-          fontSize: 12,
-          letterSpacing: 1,
+          fontSize: 10,
+          letterSpacing: 0.5,
         ),
       ),
     );
@@ -137,11 +231,11 @@ class DetailScreen extends StatelessWidget {
   }) {
     return Row(
       children: [
-        Icon(icono, size: 18, color: Colors.grey),
-        const SizedBox(width: 8),
+        Icon(icono, size: 20, color: Colors.grey.shade500),
+        const SizedBox(width: 10),
         Text(
           '$etiqueta: ',
-          style: const TextStyle(color: Colors.grey, fontSize: 14),
+          style: TextStyle(color: Colors.grey.shade500, fontSize: 13),
         ),
         Expanded(
           child: Text(
@@ -149,7 +243,7 @@ class DetailScreen extends StatelessWidget {
             style: TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 14,
-              color: colorValor,
+              color: colorValor ?? const Color(0xFF1E293B),
             ),
           ),
         ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'screens/splash_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/detail_screen.dart';
 import 'screens/about_screen.dart';
@@ -17,6 +18,10 @@ class MyApp extends StatelessWidget {
     routes: [
       GoRoute(
         path: '/',
+        builder: (context, state) => const SplashScreen(),
+      ),
+      GoRoute(
+        path: '/home',
         builder: (context, state) => const HomeScreen(),
       ),
       GoRoute(
@@ -39,7 +44,19 @@ class MyApp extends StatelessWidget {
       title: 'LojaReport',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        primarySwatch: Colors.blue,
+        useMaterial3: true,
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF3B82F6),
+          primary: const Color(0xFF1E3A8A),
+          secondary: const Color(0xFF3B82F6),
+          surface: Colors.white,
+        ),
+        scaffoldBackgroundColor: const Color(0xFFF8FAFC),
+        appBarTheme: const AppBarTheme(
+          backgroundColor: Color(0xFF1E3A8A),
+          foregroundColor: Colors.white,
+          elevation: 0,
+        ),
       ),
       routerConfig: _router,
     );
