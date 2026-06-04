@@ -35,7 +35,7 @@ class AppDrawer extends StatelessWidget {
             title: const Text('Inicio'),
             onTap: () {
               context.pop(); // Close drawer
-              context.go('/'); // Navigate to home
+              context.go('/home'); // Navigate to home
             },
           ),
           ListTile(
