@@ -1,113 +1,147 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
+import 'package:go_router/go_router.dart';
+
+import '../models/incident.dart';
+import '../services/incident_service.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final Dio _dio = Dio();
+  final IncidentService _service = IncidentService();
 
-  List<dynamic> incidentes = [];
-  bool cargando = false;
-  String error = '';
-  String filtro = 'todos';
-
-  int contadorRebuild = 0;
+  List<Incident> _incidents = [];
+  bool _loading = false;
+  String _error = '';
+  String _filter = 'todos';
 
   @override
   void initState() {
     super.initState();
-    cargarIncidentes();
+    _loadIncidents();
   }
 
-  Future<void> cargarIncidentes() async {
+  Future<void> _loadIncidents() async {
     setState(() {
-      cargando = true;
-      error = '';
+      _loading = true;
+      _error = '';
     });
 
     try {
-      final response = await _dio.get(
-        'https://6a1cf27ebcc4f20d5ca3b7bc.mockapi.io/api/v1/incidents',
-      );
-
-      if (response.statusCode == 200) {
-        setState(() {
-          incidentes = response.data;
-          cargando = false;
-        });
-      }
-    } on DioException catch (e) {
+      final data = await _service.getIncidents();
       setState(() {
-        error = 'Error al cargar los incidentes: ${e.message}';
-        cargando = false;
+        _incidents = data;
+        _loading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _error = 'Error loading incidents: $e';
+        _loading = false;
       });
     }
   }
 
-  List<dynamic> get incidentesFiltrados {
-    if (filtro == 'todos') return incidentes;
-    return incidentes.where((i) => i['type'] == filtro).toList();
+  List<Incident> get _filteredIncidents {
+    if (_filter == 'todos') return _incidents;
+    return _incidents.where((i) => i.type == _filter).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    contadorRebuild++;
-
     return Scaffold(
       appBar: AppBar(
-        title: Text('LojaReport'),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.info_outline),
-            onPressed: () => Navigator.pushNamed(context, '/about'),
-          ),
+        title: const Text('LojaReport'),
+      ),
+      drawer: _buildDrawer(),
+      body: Column(
+        children: [
+          _buildFilterBar(),
+          _buildContent(),
         ],
       ),
-      body: Column(children: [_buildBarraFiltros(), _buildContenido()]),
       floatingActionButton: FloatingActionButton(
-        onPressed: cargarIncidentes,
-        tooltip: 'Actualizar',
-        child: Icon(Icons.refresh),
+        onPressed: _loadIncidents,
+        tooltip: 'Refresh',
+        child: const Icon(Icons.refresh),
       ),
     );
   }
 
-  Widget _buildBarraFiltros() {
+  // ── Drawer ──────────────────────────────────────────────────────────
+
+  Widget _buildDrawer() {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          const UserAccountsDrawerHeader(
+            accountName: Text('Eduardo Pardo'),
+            accountEmail: Text('eduardo.pardo@uide.edu.ec'),
+            currentAccountPicture: CircleAvatar(
+              backgroundColor: Colors.white,
+              child: Icon(Icons.person, size: 40, color: Colors.blue),
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.home),
+            title: const Text('Inicio'),
+            onTap: () {
+              Navigator.of(context).pop(); // close drawer
+              context.go('/');
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.info_outline),
+            title: const Text('Información'),
+            onTap: () {
+              Navigator.of(context).pop(); // close drawer
+              context.go('/about');
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Filter bar ──────────────────────────────────────────────────────
+
+  Widget _buildFilterBar() {
     return Container(
       height: 50,
       color: Colors.blue.shade50,
       child: ListView(
         scrollDirection: Axis.horizontal,
         children: [
-          _buildChipFiltro('todos', 'All'),
-          _buildChipFiltro('pothole', 'Potholes'),
-          _buildChipFiltro('lighting', 'Lighting'),
-          _buildChipFiltro('flooding', 'Flooding'),
+          _buildFilterChip('todos', 'All'),
+          _buildFilterChip('pothole', 'Potholes'),
+          _buildFilterChip('lighting', 'Lighting'),
+          _buildFilterChip('flooding', 'Flooding'),
         ],
       ),
     );
   }
 
-  Widget _buildChipFiltro(String valor, String etiqueta) {
-    final seleccionado = filtro == valor;
+  Widget _buildFilterChip(String value, String label) {
+    final selected = _filter == value;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
       child: GestureDetector(
-        onTap: () => setState(() => filtro = valor),
+        onTap: () => setState(() => _filter = value),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
           decoration: BoxDecoration(
-            color: seleccionado ? Colors.blue : Colors.white,
+            color: selected ? Colors.blue : Colors.white,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: Colors.blue),
           ),
           child: Text(
-            etiqueta,
+            label,
             style: TextStyle(
-              color: seleccionado ? Colors.white : Colors.blue,
+              color: selected ? Colors.white : Colors.blue,
               fontWeight: FontWeight.w500,
             ),
           ),
@@ -116,11 +150,16 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildContenido() {
-    if (cargando) {
-      return const Expanded(child: Center(child: CircularProgressIndicator()));
+  // ── Content area ────────────────────────────────────────────────────
+
+  Widget _buildContent() {
+    if (_loading) {
+      return const Expanded(
+        child: Center(child: CircularProgressIndicator()),
+      );
     }
-    if (error.isNotEmpty) {
+
+    if (_error.isNotEmpty) {
       return Expanded(
         child: Center(
           child: Column(
@@ -128,10 +167,10 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               const Icon(Icons.wifi_off, size: 48, color: Colors.grey),
               const SizedBox(height: 12),
-              Text(error, style: const TextStyle(color: Colors.grey)),
+              Text(_error, style: const TextStyle(color: Colors.grey)),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: cargarIncidentes,
+                onPressed: _loadIncidents,
                 child: const Text('Retry'),
               ),
             ],
@@ -139,40 +178,40 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     }
-    if (incidentesFiltrados.isEmpty) {
+
+    if (_filteredIncidents.isEmpty) {
       return const Expanded(
         child: Center(child: Text('No incidents found for this filter.')),
       );
     }
 
     return Expanded(
-      child: ListView(
-        children: incidentesFiltrados
-            .map((incidente) => _buildTarjetaIncidente(incidente))
-            .toList(),
+      child: ListView.builder(
+        itemCount: _filteredIncidents.length,
+        itemBuilder: (context, index) =>
+            _buildIncidentCard(_filteredIncidents[index]),
       ),
     );
   }
 
-  Widget _buildTarjetaIncidente(dynamic incidente) {
-    final esResuelto = incidente['status'] == 'resolved';
-    final colorEstado = esResuelto ? Colors.green : Colors.orange;
-    final icono = incidente['type'] == 'pothole'
+  Widget _buildIncidentCard(Incident incident) {
+    final statusColor = incident.isPending ? Colors.orange : Colors.green;
+    final icon = incident.type == 'pothole'
         ? Icons.warning_amber_rounded
-        : incidente['type'] == 'lighting'
-        ? Icons.lightbulb_outline
-        : Icons.water_damage_outlined;
+        : incident.type == 'lighting'
+            ? Icons.lightbulb_outline
+            : Icons.water_damage_outlined;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       elevation: 2,
       child: ListTile(
         leading: CircleAvatar(
-          backgroundColor: colorEstado.withOpacity(0.15),
-          child: Icon(icono, color: colorEstado, size: 20),
+          backgroundColor: statusColor.withValues(alpha: 0.15),
+          child: Icon(icon, color: statusColor, size: 20),
         ),
         title: Text(
-          incidente['title'] ?? '',
+          incident.title,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
           style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
@@ -181,13 +220,13 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Zone: ${incidente['zone'] ?? ''}',
+              'Zone: ${incident.zone}',
               style: const TextStyle(fontSize: 12),
             ),
             Text(
-              (incidente['status'] ?? '').toString().toUpperCase(),
+              incident.status.toUpperCase(),
               style: TextStyle(
-                color: colorEstado,
+                color: statusColor,
                 fontWeight: FontWeight.bold,
                 fontSize: 11,
               ),
@@ -195,9 +234,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         trailing: const Icon(Icons.arrow_forward_ios, size: 14),
-        onTap: () {
-          Navigator.pushNamed(context, '/detail', arguments: incidente);
-        },
+        onTap: () => context.go('/detail', extra: incident),
       ),
     );
   }
