@@ -193,11 +193,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildTarjetaIncidente(Incident incidente) {
     final colorEstado = incidente.isResolved ? Colors.green : Colors.orange;
-    final icono = incidente.type == 'pothole'
-        ? Icons.warning_amber_rounded
-        : incidente.type == 'lighting'
-            ? Icons.lightbulb_outline
-            : Icons.water_damage_outlined;
+    final emojiEstado = incidente.isResolved ? '✅' : '🔴';
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -205,7 +201,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: colorEstado.withValues(alpha: 0.15),
-          child: Icon(icono, color: colorEstado, size: 20),
+          child: Text(emojiEstado, style: const TextStyle(fontSize: 16)),
         ),
         title: Text(
           incidente.title,
