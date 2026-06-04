@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../models/incident.dart';
 import '../controllers/incident_controller.dart';
 
@@ -26,9 +27,46 @@ class _HomeScreenState extends State<HomeScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.info_outline),
-            onPressed: () => Navigator.pushNamed(context, '/about'),
+            onPressed: () => context.push('/about'),
           ),
         ],
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            const UserAccountsDrawerHeader(
+              accountName: Text(
+                'Fernando Castillo',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+              accountEmail: Text('fernando.castillo@uide.edu.ec'),
+              currentAccountPicture: CircleAvatar(
+                backgroundColor: Colors.white,
+                child: Icon(Icons.person, size: 40, color: Colors.blue),
+              ),
+              decoration: BoxDecoration(
+                color: Colors.blue,
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.home),
+              title: const Text('Inicio'),
+              onTap: () {
+                context.pop();
+                context.go('/');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.info),
+              title: const Text('Información'),
+              onTap: () {
+                context.pop();
+                context.push('/about');
+              },
+            ),
+          ],
+        ),
       ),
       body: ListenableBuilder(
         listenable: _controller,
@@ -173,7 +211,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         onTap: () {
-          Navigator.pushNamed(context, '/detail', arguments: incidente);
+          context.push('/detail', extra: incidente);
         },
       ),
     );
