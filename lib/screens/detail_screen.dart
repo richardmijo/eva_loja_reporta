@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
 
 class DetailScreen extends StatefulWidget {
+  const DetailScreen({super.key});
+
   @override
-  _DetailScreenState createState() => _DetailScreenState();
+  State<DetailScreen> createState() => _DetailScreenState();
 }
 
 class _DetailScreenState extends State<DetailScreen> {
-  final Dio _dio = Dio();
-
   bool favorito = false;
 
   @override
@@ -24,11 +23,12 @@ class _DetailScreenState extends State<DetailScreen> {
         title: const Text('Incident Detail'),
         actions: [
           IconButton(
-            icon: Icon(
-              favorito ? Icons.bookmark : Icons.bookmark_border,
-              color: Colors.white,
-            ),
-            onPressed: () => setState(() => favorito = !favorito),
+            icon: Icon(favorito ? Icons.bookmark : Icons.bookmark_border),
+            onPressed: () {
+              setState(() {
+                favorito = !favorito;
+              });
+            },
           ),
         ],
       ),
@@ -37,38 +37,58 @@ class _DetailScreenState extends State<DetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildEtiquetaTipo(incidente['type'] ?? '', colorEstado),
+            _buildEtiquetaTipo(
+              incidente['type']?.toString() ?? '',
+              colorEstado,
+            ),
             const SizedBox(height: 16),
+
             Text(
-              incidente['title'] ?? '',
+              incidente['title']?.toString() ?? '',
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
+
             const SizedBox(height: 20),
-            _buildFila(Icons.location_on, 'Zone', incidente['zone'] ?? ''),
+
+            _buildFila(
+              Icons.location_on,
+              'Zone',
+              incidente['zone']?.toString() ?? '',
+            ),
+
             const SizedBox(height: 12),
+
             _buildFila(
               esResuelto ? Icons.check_circle : Icons.pending,
               'Status',
               (incidente['status'] ?? '').toString().toUpperCase(),
               colorValor: colorEstado,
             ),
+
             const SizedBox(height: 24),
+
             const Text(
               'Description',
               style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
+
             const SizedBox(height: 8),
+
             Text(
-              incidente['description'] ?? '',
+              incidente['description']?.toString() ?? '',
               style: const TextStyle(fontSize: 14, height: 1.6),
             ),
+
             const SizedBox(height: 32),
+
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () => Navigator.pushNamed(context, '/'),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
                 icon: const Icon(Icons.arrow_back),
-                label: const Text('Back to home'),
+                label: const Text('Back'),
               ),
             ),
           ],
@@ -78,18 +98,20 @@ class _DetailScreenState extends State<DetailScreen> {
   }
 
   Widget _buildEtiquetaTipo(String tipo, Color color) {
-    final etiqueta = tipo == 'pothole'
-        ? 'Pothole'
-        : tipo == 'lighting'
-        ? 'Lighting'
-        : 'Flooding';
+    String etiqueta = 'Flooding';
+
+    if (tipo == 'pothole') {
+      etiqueta = 'Pothole';
+    } else if (tipo == 'lighting') {
+      etiqueta = 'Lighting';
+    }
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Text(
         etiqueta.toUpperCase(),

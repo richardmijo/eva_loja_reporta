@@ -1,20 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:dio/dio.dart';
+import 'package:go_router/go_router.dart';
 
 class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
-  _HomeScreenState createState() => _HomeScreenState();
+  State<HomeScreen> createState() => _HomeScreenState();
 }
 
 class _HomeScreenState extends State<HomeScreen> {
+  static const String apiUrl =
+      'https://6a1cf27ebcc4f20d5ca3b7bc.mockapi.io/api/v1/incidents';
+
   final Dio _dio = Dio();
 
   List<dynamic> incidentes = [];
   bool cargando = false;
   String error = '';
   String filtro = 'todos';
-
-  int contadorRebuild = 0;
 
   @override
   void initState() {
@@ -29,9 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
     });
 
     try {
-      final response = await _dio.get(
-        'https://6a1cf27ebcc4f20d5ca3b7bc.mockapi.io/api/v1/incidents',
-      );
+      final response = await _dio.get(apiUrl);
 
       if (response.statusCode == 200) {
         setState(() {
@@ -41,7 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     } on DioException catch (e) {
       setState(() {
-        error = 'Error al cargar los incidentes: ${e.message}';
+        error = 'Error al cargar incidentes: ${e.message}';
         cargando = false;
       });
     }
@@ -49,28 +51,55 @@ class _HomeScreenState extends State<HomeScreen> {
 
   List<dynamic> get incidentesFiltrados {
     if (filtro == 'todos') return incidentes;
+
     return incidentes.where((i) => i['type'] == filtro).toList();
   }
 
   @override
   Widget build(BuildContext context) {
-    contadorRebuild++;
-
     return Scaffold(
+      drawer: Drawer(
+        child: ListView(
+          children: [
+            const UserAccountsDrawerHeader(
+              accountName: Text('Malena Orbea'),
+              accountEmail: Text('malena@uideloja.edu.ec'),
+              currentAccountPicture: CircleAvatar(child: Icon(Icons.person)),
+            ),
+            ListTile(
+              leading: const Icon(Icons.home),
+              title: const Text('Inicio'),
+              onTap: () {
+                Navigator.pop(context);
+                context.go('/');
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.info),
+              title: const Text('Información'),
+              onTap: () {
+                Navigator.pop(context);
+                context.go('/about');
+              },
+            ),
+          ],
+        ),
+      ),
       appBar: AppBar(
-        title: Text('LojaReport'),
+        title: const Text('LojaReport'),
         actions: [
           IconButton(
-            icon: Icon(Icons.info_outline),
-            onPressed: () => Navigator.pushNamed(context, '/about'),
+            icon: const Icon(Icons.info_outline),
+            onPressed: () {
+              context.push('/about');
+            },
           ),
         ],
       ),
       body: Column(children: [_buildBarraFiltros(), _buildContenido()]),
       floatingActionButton: FloatingActionButton(
         onPressed: cargarIncidentes,
-        tooltip: 'Actualizar',
-        child: Icon(Icons.refresh),
+        child: const Icon(Icons.refresh),
       ),
     );
   }
@@ -93,10 +122,15 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _buildChipFiltro(String valor, String etiqueta) {
     final seleccionado = filtro == valor;
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
       child: GestureDetector(
-        onTap: () => setState(() => filtro = valor),
+        onTap: () {
+          setState(() {
+            filtro = valor;
+          });
+        },
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
           decoration: BoxDecoration(
@@ -120,6 +154,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (cargando) {
       return const Expanded(child: Center(child: CircularProgressIndicator()));
     }
+
     if (error.isNotEmpty) {
       return Expanded(
         child: Center(
@@ -128,7 +163,7 @@ class _HomeScreenState extends State<HomeScreen> {
             children: [
               const Icon(Icons.wifi_off, size: 48, color: Colors.grey),
               const SizedBox(height: 12),
-              Text(error, style: const TextStyle(color: Colors.grey)),
+              Text(error),
               const SizedBox(height: 16),
               ElevatedButton(
                 onPressed: cargarIncidentes,
@@ -139,24 +174,26 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       );
     }
+
     if (incidentesFiltrados.isEmpty) {
-      return const Expanded(
-        child: Center(child: Text('No incidents found for this filter.')),
-      );
+      return const Expanded(child: Center(child: Text('No incidents found')));
     }
 
     return Expanded(
-      child: ListView(
-        children: incidentesFiltrados
-            .map((incidente) => _buildTarjetaIncidente(incidente))
-            .toList(),
+      child: ListView.builder(
+        itemCount: incidentesFiltrados.length,
+        itemBuilder: (context, index) {
+          return _buildTarjetaIncidente(incidentesFiltrados[index]);
+        },
       ),
     );
   }
 
   Widget _buildTarjetaIncidente(dynamic incidente) {
     final esResuelto = incidente['status'] == 'resolved';
+
     final colorEstado = esResuelto ? Colors.green : Colors.orange;
+
     final icono = incidente['type'] == 'pothole'
         ? Icons.warning_amber_rounded
         : incidente['type'] == 'lighting'
@@ -165,38 +202,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      elevation: 2,
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: colorEstado.withOpacity(0.15),
-          child: Icon(icono, color: colorEstado, size: 20),
+          child: Icon(icono, color: colorEstado),
         ),
-        title: Text(
-          incidente['title'] ?? '',
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-        ),
+        title: Text(incidente['title'] ?? ''),
         subtitle: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Zone: ${incidente['zone'] ?? ''}',
-              style: const TextStyle(fontSize: 12),
-            ),
+            Text('Zone: ${incidente['zone']}'),
             Text(
               (incidente['status'] ?? '').toString().toUpperCase(),
-              style: TextStyle(
-                color: colorEstado,
-                fontWeight: FontWeight.bold,
-                fontSize: 11,
-              ),
+              style: TextStyle(color: colorEstado, fontWeight: FontWeight.bold),
             ),
           ],
         ),
-        trailing: const Icon(Icons.arrow_forward_ios, size: 14),
+        trailing: const Icon(Icons.arrow_forward_ios),
         onTap: () {
-          Navigator.pushNamed(context, '/detail', arguments: incidente);
+          context.push('/detail', extra: incidente);
         },
       ),
     );
