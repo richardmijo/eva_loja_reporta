@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../models/incident.dart';
+import '../repositories/incident_repository.dart';
 
 class IncidentController extends ChangeNotifier {
   // Singleton pattern
@@ -7,19 +8,50 @@ class IncidentController extends ChangeNotifier {
   factory IncidentController() => _instance;
   IncidentController._internal();
 
-  List<Incident> _incidents = [];
-  List<Incident> get incidents => _incidents;
+  final IncidentRepository _repository = IncidentRepository();
 
-  void setIncidents(List<Incident> list) {
-    // Preserve local favorite status when reloading data from the server
-    _incidents = list.map((newIncident) {
-      final existingIndex = _incidents.indexWhere((element) => element.id == newIncident.id);
-      if (existingIndex != -1) {
-        return newIncident.copyWith(isFavorite: _incidents[existingIndex].isFavorite);
-      }
-      return newIncident;
-    }).toList();
+  List<Incident> _incidents = [];
+  bool _isLoading = false;
+  String _error = '';
+  String _activeFilter = 'todos';
+
+  List<Incident> get incidents => _incidents;
+  bool get isLoading => _isLoading;
+  String get error => _error;
+  String get activeFilter => _activeFilter;
+
+  List<Incident> get filteredIncidents {
+    if (_activeFilter == 'todos') return _incidents;
+    return _incidents.where((i) => i.type == _activeFilter).toList();
+  }
+
+  void setFilter(String filter) {
+    _activeFilter = filter;
     notifyListeners();
+  }
+
+  Future<void> loadIncidents() async {
+    _isLoading = true;
+    _error = '';
+    notifyListeners();
+
+    try {
+      final list = await _repository.fetchIncidents();
+      // Preserve local favorite status when reloading data from the server
+      _incidents = list.map((newIncident) {
+        final existingIndex = _incidents.indexWhere((element) => element.id == newIncident.id);
+        if (existingIndex != -1) {
+          return newIncident.copyWith(isFavorite: _incidents[existingIndex].isFavorite);
+        }
+        return newIncident;
+      }).toList();
+      _isLoading = false;
+      notifyListeners();
+    } catch (e) {
+      _error = e.toString();
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Incident? findById(String id) {
