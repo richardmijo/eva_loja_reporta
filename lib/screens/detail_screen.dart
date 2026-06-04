@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
-import 'package:share_plus/share_plus.dart';
 
 import '../models/incident.dart';
 
@@ -9,14 +9,14 @@ class DetailScreen extends StatelessWidget {
 
   final Incident incident;
 
-  Future<void> _shareIncident(BuildContext context) async {
-    await Share.share(incident.shareMessage);
+  Future<void> _copyToClipboard(BuildContext context) async {
+    await Clipboard.setData(ClipboardData(text: incident.clipboardMessage));
 
     if (!context.mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
-        content: Text('Incident shared successfully'),
+        content: Text('Copied to clipboard'),
         duration: Duration(seconds: 2),
       ),
     );
@@ -24,7 +24,7 @@ class DetailScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorEstado = incident.isResolved ? Colors.green : Colors.orange;
+    final colorEstado = incident.isResolved ? Colors.green : Colors.red;
 
     return Scaffold(
       appBar: AppBar(
@@ -32,7 +32,7 @@ class DetailScreen extends StatelessWidget {
         actions: [
           IconButton(
             icon: const Icon(Icons.share),
-            onPressed: () => _shareIncident(context),
+            onPressed: () => _copyToClipboard(context),
           ),
         ],
       ),
@@ -50,12 +50,7 @@ class DetailScreen extends StatelessWidget {
             const SizedBox(height: 20),
             _row(Icons.location_on, 'Zone', incident.zone),
             const SizedBox(height: 12),
-            _row(
-              incident.isResolved ? Icons.check_circle : Icons.pending,
-              'Status',
-              incident.status.toUpperCase(),
-              valueColor: colorEstado,
-            ),
+            _statusRow(colorEstado),
             const SizedBox(height: 24),
             const Text(
               'Description',
@@ -78,6 +73,33 @@ class DetailScreen extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _statusRow(Color colorEstado) {
+    final statusIcon = incident.isResolved
+        ? Icon(Icons.check_circle, size: 18, color: colorEstado)
+        : Icon(Icons.circle, size: 14, color: colorEstado);
+
+    return Row(
+      children: [
+        statusIcon,
+        const SizedBox(width: 8),
+        const Text(
+          'Status: ',
+          style: TextStyle(color: Colors.grey, fontSize: 14),
+        ),
+        Expanded(
+          child: Text(
+            incident.status.toUpperCase(),
+            style: TextStyle(
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
+              color: colorEstado,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
