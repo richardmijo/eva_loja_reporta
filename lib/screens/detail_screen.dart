@@ -1,34 +1,54 @@
 import 'package:flutter/material.dart';
-import 'package:dio/dio.dart';
+import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 
-class DetailScreen extends StatefulWidget {
-  @override
-  _DetailScreenState createState() => _DetailScreenState();
-}
+import '../models/incident.dart';
+import '../providers/favorites_provider.dart';
 
-class _DetailScreenState extends State<DetailScreen> {
-  final Dio _dio = Dio();
+class DetailScreen extends StatelessWidget {
+  const DetailScreen({super.key, required this.incident});
 
-  bool favorito = false;
+  final Incident incident;
+
+  String _shareText() {
+    final emoji = incident.isResolved ? '✅' : '🔴';
+    return '$emoji, Incident in ${incident.zone}: ${incident.title} '
+        'Status: ${incident.status} Reported on LojaReport . Loja, Ecuador';
+  }
+
+  Future<void> _copyToClipboard(BuildContext context) async {
+    await Clipboard.setData(ClipboardData(text: _shareText()));
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Copied to clipboard'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final incidente =
-        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-
-    final esResuelto = incidente['status'] == 'resolved';
-    final colorEstado = esResuelto ? Colors.green : Colors.orange;
+    final favorites = context.watch<FavoritesProvider>();
+    final isFavorite = favorites.isFavorite(incident.id);
+    final isResolved = incident.isResolved;
+    final statusColor = isResolved ? Colors.green : Colors.orange;
 
     return Scaffold(
       appBar: AppBar(
         title: const Text('Incident Detail'),
         actions: [
           IconButton(
+            icon: const Icon(Icons.share),
+            onPressed: () => _copyToClipboard(context),
+          ),
+          IconButton(
             icon: Icon(
-              favorito ? Icons.bookmark : Icons.bookmark_border,
+              isFavorite ? Icons.bookmark : Icons.bookmark_border,
               color: Colors.white,
             ),
-            onPressed: () => setState(() => favorito = !favorito),
+            onPressed: () => favorites.toggleFavorite(incident.id),
           ),
         ],
       ),
@@ -37,20 +57,20 @@ class _DetailScreenState extends State<DetailScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _buildEtiquetaTipo(incidente['type'] ?? '', colorEstado),
+            _buildTypeLabel(incident.type, statusColor),
             const SizedBox(height: 16),
             Text(
-              incidente['title'] ?? '',
+              incident.title,
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-            _buildFila(Icons.location_on, 'Zone', incidente['zone'] ?? ''),
+            _buildRow(Icons.location_on, 'Zone', incident.zone),
             const SizedBox(height: 12),
-            _buildFila(
-              esResuelto ? Icons.check_circle : Icons.pending,
+            _buildRow(
+              isResolved ? Icons.check_circle : Icons.pending,
               'Status',
-              (incidente['status'] ?? '').toString().toUpperCase(),
-              colorValor: colorEstado,
+              incident.status.toUpperCase(),
+              valueColor: statusColor,
             ),
             const SizedBox(height: 24),
             const Text(
@@ -59,14 +79,14 @@ class _DetailScreenState extends State<DetailScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              incidente['description'] ?? '',
+              incident.description,
               style: const TextStyle(fontSize: 14, height: 1.6),
             ),
             const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton.icon(
-                onPressed: () => Navigator.pushNamed(context, '/'),
+                onPressed: () => context.pop(),
                 icon: const Icon(Icons.arrow_back),
                 label: const Text('Back to home'),
               ),
@@ -77,22 +97,22 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
-  Widget _buildEtiquetaTipo(String tipo, Color color) {
-    final etiqueta = tipo == 'pothole'
+  Widget _buildTypeLabel(String type, Color color) {
+    final label = type == 'pothole'
         ? 'Pothole'
-        : tipo == 'lighting'
+        : type == 'lighting'
         ? 'Lighting'
         : 'Flooding';
 
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.15),
+        color: color.withValues(alpha: 0.15),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: color.withOpacity(0.4)),
+        border: Border.all(color: color.withValues(alpha: 0.4)),
       ),
       child: Text(
-        etiqueta.toUpperCase(),
+        label.toUpperCase(),
         style: TextStyle(
           color: color,
           fontWeight: FontWeight.bold,
@@ -103,27 +123,27 @@ class _DetailScreenState extends State<DetailScreen> {
     );
   }
 
-  Widget _buildFila(
-    IconData icono,
-    String etiqueta,
-    String valor, {
-    Color? colorValor,
+  Widget _buildRow(
+    IconData icon,
+    String label,
+    String value, {
+    Color? valueColor,
   }) {
     return Row(
       children: [
-        Icon(icono, size: 18, color: Colors.grey),
+        Icon(icon, size: 18, color: Colors.grey),
         const SizedBox(width: 8),
         Text(
-          '$etiqueta: ',
+          '$label: ',
           style: const TextStyle(color: Colors.grey, fontSize: 14),
         ),
         Expanded(
           child: Text(
-            valor,
+            value,
             style: TextStyle(
               fontWeight: FontWeight.w600,
               fontSize: 14,
-              color: colorValor,
+              color: valueColor,
             ),
           ),
         ),
