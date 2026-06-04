@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import '../config/api_config.dart';
 
@@ -13,9 +14,9 @@ class DioClient {
       ),
     );
 
-    _dio.interceptors.add(
-      LogInterceptor(requestBody: true, responseBody: true),
-    );
+    if (kDebugMode) {
+      _dio.interceptors.add(LogInterceptor(responseBody: true));
+    }
   }
 
   late final Dio _dio;

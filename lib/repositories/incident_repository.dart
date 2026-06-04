@@ -17,6 +17,10 @@ class IncidentRepository {
         final data = response.data as List<dynamic>;
         return data
             .map((item) => Incident.fromJson(item as Map<String, dynamic>))
+            .where((incident) =>
+                incident.type == 'pothole' ||
+                incident.type == 'lighting' ||
+                incident.type == 'flooding')
             .toList();
       }
 
