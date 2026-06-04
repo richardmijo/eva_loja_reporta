@@ -132,11 +132,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildIncidentCard(BuildContext context, Incident incident) {
     final isResolved = incident.isResolved;
     final statusColor = isResolved ? Colors.green : Colors.orange;
-    final icon = incident.type == 'pothole'
-        ? Icons.warning_amber_rounded
-        : incident.type == 'lighting'
-        ? Icons.lightbulb_outline
-        : Icons.water_damage_outlined;
 
     return Card(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
@@ -144,7 +139,10 @@ class _HomeScreenState extends State<HomeScreen> {
       child: ListTile(
         leading: CircleAvatar(
           backgroundColor: statusColor.withValues(alpha: 0.15),
-          child: Icon(icon, color: statusColor, size: 20),
+          child: Text(
+            incident.statusEmoji,
+            style: const TextStyle(fontSize: 22),
+          ),
         ),
         title: Text(
           incident.title,
@@ -160,7 +158,7 @@ class _HomeScreenState extends State<HomeScreen> {
               style: const TextStyle(fontSize: 12),
             ),
             Text(
-              incident.status.toUpperCase(),
+              '${incident.statusEmoji} ${incident.status.toUpperCase()}',
               style: TextStyle(
                 color: statusColor,
                 fontWeight: FontWeight.bold,

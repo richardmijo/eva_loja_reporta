@@ -12,8 +12,7 @@ class DetailScreen extends StatelessWidget {
   final Incident incident;
 
   String _shareText() {
-    final emoji = incident.isResolved ? '✅' : '🔴';
-    return '$emoji, Incident in ${incident.zone}: ${incident.title} '
+    return '${incident.statusEmoji}, Incident in ${incident.zone}: ${incident.title} '
         'Status: ${incident.status} Reported on LojaReport . Loja, Ecuador';
   }
 
@@ -64,12 +63,12 @@ class DetailScreen extends StatelessWidget {
               style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 20),
-            _buildRow(Icons.location_on, 'Zone', incident.zone),
+            _buildRow('Zone', incident.zone, leadingIcon: Icons.location_on),
             const SizedBox(height: 12),
             _buildRow(
-              isResolved ? Icons.check_circle : Icons.pending,
               'Status',
               incident.status.toUpperCase(),
+              leadingEmoji: incident.statusEmoji,
               valueColor: statusColor,
             ),
             const SizedBox(height: 24),
@@ -124,14 +123,18 @@ class DetailScreen extends StatelessWidget {
   }
 
   Widget _buildRow(
-    IconData icon,
     String label,
     String value, {
+    IconData? leadingIcon,
+    String? leadingEmoji,
     Color? valueColor,
   }) {
     return Row(
       children: [
-        Icon(icon, size: 18, color: Colors.grey),
+        if (leadingEmoji != null)
+          Text(leadingEmoji, style: const TextStyle(fontSize: 18))
+        else if (leadingIcon != null)
+          Icon(leadingIcon, size: 18, color: Colors.grey),
         const SizedBox(width: 8),
         Text(
           '$label: ',

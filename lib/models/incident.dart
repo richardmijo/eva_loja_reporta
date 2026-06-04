@@ -17,6 +17,9 @@ class Incident {
 
   bool get isResolved => status == 'resolved';
 
+  /// 🔴 pending, ✅ resolved (share text and UI alerts).
+  String get statusEmoji => isResolved ? '✅' : '🔴';
+
   factory Incident.fromJson(Map<String, dynamic> json) {
     return Incident(
       id: json['id'].toString(),
