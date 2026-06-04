@@ -33,7 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
-      drawer: const AppDrawer(),
+      drawer: const AppDrawer(currentLocation: '/home'),
       body: Column(
         children: [
           FilterBar(),

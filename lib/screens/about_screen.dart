@@ -6,20 +6,21 @@ class AboutScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('About'),
+        title: const Text('Información'),
       ),
-      drawer: const AppDrawer(),
+      drawer: const AppDrawer(currentLocation: '/about'),
       body: Padding(
         padding: const EdgeInsets.all(24),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const CircleAvatar(
+            CircleAvatar(
               radius: 36,
-              backgroundColor: Colors.blue,
-              child: Icon(Icons.location_city, color: Colors.white, size: 36),
+              backgroundColor: theme.colorScheme.primary,
+              child: const Icon(Icons.location_city, color: Colors.white, size: 36),
             ),
             const SizedBox(height: 20),
             const Text(
@@ -28,21 +29,26 @@ class AboutScreen extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Version 1.0.0',
+              'Versión 1.0.0',
               style: TextStyle(color: Colors.grey),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Autor: Jhandry Jaramillo',
+              style: TextStyle(color: Colors.grey.shade600, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 20),
             const Text(
-              'LojaReport allows citizens of Loja to consult urban incidents '
-              'reported in the city, including potholes, lighting problems '
-              'and flooding.',
+              'LojaReport permite a los ciudadanos de Loja consultar los incidentes '
+              'urbanos reportados en la ciudad, incluyendo baches, problemas de '
+              'alumbrado público e inundaciones.',
               style: TextStyle(fontSize: 14, height: 1.6),
             ),
             const SizedBox(height: 32),
             const Divider(),
             const SizedBox(height: 16),
             const Text(
-              'Community project',
+              'Proyecto Comunitario',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 4),

@@ -19,7 +19,7 @@ class DetailScreen extends StatelessWidget {
         title: const Text('Incident Detail'),
         actions: [
           IconButton(
-            icon: const Icon(Icons.share, color: Colors.white),
+            icon: const Icon(Icons.share),
             onPressed: () async {
               final emoji = esResuelto ? '✅' : '🔴';
               final shareText = '$emoji Incident in ${incident.zone}: ${incident.title} Status: ${incident.status} Reported on LojaReport · Loja, Ecuador';
@@ -41,7 +41,6 @@ class DetailScreen extends StatelessWidget {
               return IconButton(
                 icon: Icon(
                   favorito ? Icons.bookmark : Icons.bookmark_border,
-                  color: Colors.white,
                 ),
                 onPressed: () => IncidentController().toggleFavorito(incident.id),
               );
