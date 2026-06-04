@@ -59,10 +59,7 @@ class DetailScreen extends StatelessWidget {
 
   void _shareIncident(BuildContext context) {
     final emoji = incident.isResolved ? '✅' : '🔴';
-    final text =
-        '$emoji Incident in ${incident.zone}: ${incident.title}\n'
-        'Status: ${incident.status}\n'
-        'Reported on LojaReport · Loja, Ecuador';
+    final text = '$emoji Incident in ${incident.zone}: ${incident.title} Status: ${incident.status} Reported on LojaReport · Loja, Ecuador';
 
     Clipboard.setData(ClipboardData(text: text));
 
